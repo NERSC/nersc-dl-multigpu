@@ -1,0 +1,22 @@
+default: &default
+  num_data_workers: 1
+  # model
+  in_chan: 1
+  out_chan: 1
+  depth: 5
+  # optimization
+  lr: 1E-3
+  max_epochs: 25
+  max_cosine_lr_epochs: 25
+  batch_size: 32
+  valid_batch_size: 32
+  # misc
+  log_to_screen: !!bool True
+  save_checkpoint: !!bool True
+  # data
+  train_path: ''
+  val_path: ''
+
+test:  # inherit configs from the alias default
+  <<: *default
+  batch_size: 16

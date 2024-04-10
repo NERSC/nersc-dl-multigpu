@@ -1,0 +1,85 @@
+
+Lmod is automatically replacing "gcc-native/12.3" with "gcc/11.2.0".
+
+Warning: This is an experimental release of NCCL with an OFI plugin for use with libfabric on Perlmutter.
+In case of issues, please refer to our known issues: https://docs.nersc.gov/current/
+and open a help ticket if your issue is not listed: https://help.nersc.gov/
+
+Inactive Modules:
+  1) cray-libsci/23.12.5
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.28 => cray-mpich/8.1.25
+  2) cudatoolkit/12.2 => cudatoolkit/11.7
+
++ srun -l bash -c '
+    source export_DDP_vars.sh
+    python train_multi_gpu.py --yaml_config=./configs/default.yaml --config=default --run_num=ddp-module
+    '
+0: running on rank 0 with world size 8
+0: Starting training loop...
+1: running on rank 1 with world size 8
+6: running on rank 6 with world size 8
+2: running on rank 2 with world size 8
+4: running on rank 4 with world size 8
+3: running on rank 3 with world size 8
+5: running on rank 5 with world size 8
+7: running on rank 7 with world size 8
+0: Time taken for epoch 1 is 4.117171287536621 sec; with 3.8379714488983154/0.07996940612792969 in tr/val
+0: Loss = 0.24874788522720337, Val loss = 0.15343640744686127
+0: Time taken for epoch 2 is 0.19082045555114746 sec; with 0.012855052947998047/0.07760024070739746 in tr/val
+0: Loss = 0.11401002109050751, Val loss = 0.1112530305981636
+0: Time taken for epoch 3 is 0.19234561920166016 sec; with 0.012920379638671875/0.08052396774291992 in tr/val
+0: Loss = 0.1019570454955101, Val loss = 0.08915676176548004
+0: Time taken for epoch 4 is 0.18512797355651855 sec; with 0.01283121109008789/0.07566499710083008 in tr/val
+0: Loss = 0.09467405080795288, Val loss = 0.08709549903869629
+0: Time taken for epoch 5 is 0.17812108993530273 sec; with 0.012481689453125/0.08036327362060547 in tr/val
+0: Loss = 0.09084822982549667, Val loss = 0.0920911580324173
+0: Time taken for epoch 6 is 0.16919565200805664 sec; with 0.01291203498840332/0.07264304161071777 in tr/val
+0: Loss = 0.08900198340415955, Val loss = 0.09039506316184998
+0: Time taken for epoch 7 is 0.18103408813476562 sec; with 0.012734651565551758/0.07927536964416504 in tr/val
+0: Loss = 0.08907757699489594, Val loss = 0.08718644827604294
+0: Time taken for epoch 8 is 0.18585205078125 sec; with 0.012363433837890625/0.0744771957397461 in tr/val
+0: Loss = 0.08799915015697479, Val loss = 0.08698329329490662
+0: Time taken for epoch 9 is 0.18680644035339355 sec; with 0.012633800506591797/0.07617521286010742 in tr/val
+0: Loss = 0.08700186014175415, Val loss = 0.08678647875785828
+0: Time taken for epoch 10 is 0.18701744079589844 sec; with 0.012856245040893555/0.07600641250610352 in tr/val
+0: Loss = 0.08667950332164764, Val loss = 0.08677049726247787
+0: Time taken for epoch 11 is 0.1864762306213379 sec; with 0.012531280517578125/0.07558274269104004 in tr/val
+0: Loss = 0.08649405837059021, Val loss = 0.08642274141311646
+0: Time taken for epoch 12 is 0.19955897331237793 sec; with 0.012639045715332031/0.07686424255371094 in tr/val
+0: Loss = 0.08633644133806229, Val loss = 0.08617909252643585
+0: Time taken for epoch 13 is 0.18767452239990234 sec; with 0.012165069580078125/0.07742810249328613 in tr/val
+0: Loss = 0.08612940460443497, Val loss = 0.08617173880338669
+0: Time taken for epoch 14 is 0.18761825561523438 sec; with 0.012582063674926758/0.07757449150085449 in tr/val
+0: Loss = 0.08605360239744186, Val loss = 0.08606971800327301
+0: Time taken for epoch 15 is 0.18538641929626465 sec; with 0.012786626815795898/0.0748586654663086 in tr/val
+0: Loss = 0.08591939508914948, Val loss = 0.08586513251066208
+0: Time taken for epoch 16 is 0.18600869178771973 sec; with 0.012336254119873047/0.07556676864624023 in tr/val
+0: Loss = 0.08585461974143982, Val loss = 0.08563943207263947
+0: Time taken for epoch 17 is 0.18488788604736328 sec; with 0.012312650680541992/0.07434988021850586 in tr/val
+0: Loss = 0.08553601801395416, Val loss = 0.08562417328357697
+0: Time taken for epoch 18 is 0.18117833137512207 sec; with 0.012690544128417969/0.07335615158081055 in tr/val
+0: Loss = 0.08550021052360535, Val loss = 0.08552759885787964
+0: Time taken for epoch 19 is 0.19500970840454102 sec; with 0.012427091598510742/0.07924914360046387 in tr/val
+0: Loss = 0.08552197366952896, Val loss = 0.08551042526960373
+0: Time taken for epoch 20 is 0.18654465675354004 sec; with 0.012928485870361328/0.07664632797241211 in tr/val
+0: Loss = 0.08544297516345978, Val loss = 0.08530240505933762
+0: Time taken for epoch 21 is 0.1759626865386963 sec; with 0.012696981430053711/0.07733416557312012 in tr/val
+0: Loss = 0.08536724746227264, Val loss = 0.08535083383321762
+0: Time taken for epoch 22 is 0.1740260124206543 sec; with 0.012762784957885742/0.07814741134643555 in tr/val
+0: Loss = 0.08529458194971085, Val loss = 0.08531308174133301
+0: Time taken for epoch 23 is 0.19400763511657715 sec; with 0.01262211799621582/0.07969355583190918 in tr/val
+0: Loss = 0.08524888753890991, Val loss = 0.08524558693170547
+0: Time taken for epoch 24 is 0.19671869277954102 sec; with 0.012537717819213867/0.08339357376098633 in tr/val
+0: Loss = 0.08525350689888, Val loss = 0.08518379181623459
+1: Training complete
+4: Training complete
+2: Training complete
+5: Training complete
+3: Training complete
+6: Training complete
+0: Time taken for epoch 25 is 0.17529964447021484 sec; with 0.012512683868408203/0.07589221000671387 in tr/val
+0: Loss = 0.08524718135595322, Val loss = 0.08525343239307404
+0: Training complete
+7: Training complete

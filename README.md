@@ -1,6 +1,6 @@
-# From single GPU to multiGPU training of PyTorch applications at NERSC
+# From single-GPU to multi-GPU training of PyTorch applications at NERSC
 
-This repo covers material from the [Grads@NERSC](https://www.nersc.gov/events/gradsatnersc/) event. It includes minimal example scripts that show how to move from Jupyter notebooks to scripts that can run on multiple GPUs (and multiple nodes) on the Perlmutter supercomputer at NERSC. 
+This repo covers material from the [Grads@NERSC](https://www.nersc.gov/events/gradsatnersc/) event. It includes minimal example scripts that show how to move from Jupyter notebooks to scripts that can run on multiple GPUs (and multiple nodes) on the Perlmutter supercomputer at NERSC.
 
 ### Jupyter notebooks
 We recommend running machine learning workloads for testing or small-scale runs on a Jupyter notebook to enable interactivity with the user. At NERSC, this can be done easily through JupyterHub with the following steps:
@@ -13,18 +13,19 @@ We recommend running machine learning workloads for testing or small-scale runs 
 5. Quick note on libraries: While you can build your own conda environment, the other recommendation is to use modules or containers. In either case, if you need libraries in addition to what's already provided, use the `--user` flag so that the libraries are installed in `PYTHONUSERBASE`. For modules, this is defined by default and for containers, we recommend you define this variable to some local location so that user defined libraries do not interfere with the default environment.
 
 ### Notebooks to scripts
-As you move to more larger workloads, the general recommendation is to use scripts -- this is especially so for multiGPU workloads, since it is tricky to get this working with Jupyter notebooks. We also recommend to group your routines into subdirectories for clean workflows. 
+As you move to more larger workloads, the general recommendation is to use scripts -- this is especially so for multi-GPU workloads, since it is tricky to get this working with Jupyter notebooks. We also recommend organizing parts of your code, such as data loaders and neural network definitions, into separate subdirectories for more modular codebases. This makes it easier to add and modify features as the code gets improved and features are added.
+
 - The example notebook has been converted into the [`train_single_gpu` script](train_single_gpu.py) with a class structure that allows for easier extension into custom workflows.
-- We have also added two additional routines that implement the checkpoint-restart function. This allows you to start the training from where a previous run ended by loading a saved model checkpoint (along with the optimizer and learning rate schedulers). We highly recommend checkpoint-restart while submitting jobs.
-- To run a quick single GPU script, follow these steps:
+- We have also added two additional routines that implement the checkpoint-restart function. This allows you to start the training from where a previous run ended by loading a saved model checkpoint (along with the optimizer and learning rate schedulers). We highly recommend you consider checkpoint-restart while submitting jobs, since the perlmutter `regular` GPU queue has a maximum job time limit of 24 hours (training longer than that will require multiple jobs with checkpoint-restart).
+- To run a quick single-GPU script, follow these steps:
 	- Request an interactive node with `salloc --nodes 1 --qos interactive -t 30 -C gpu -A <your_account>`
-	- Load a default PyTorch module for libraries with `module load pytorch/2.0.1`. You may also use your own conda environment with `module load conda; conda activate <your_env>`.
+	- Load a default PyTorch module environment with `module load pytorch/2.0.1`. You may also use your own conda environment with `module load conda; conda activate <your_env>` (plus loading any background modules, such as `cudnn`, needed by your conda environment).
 	- Run `python train_single_gpu.py`
 - The script will save model checkpoints every epoch to the `outputs` directory and also the best model checkpoint that tracks the lowest validation loss (general strategy to choose the best model that avoids overfitting)
 
 
-### Scripts on single GPU to multiple GPUs (and nodes)
-To speed up training (due to large datasets), the most common strategy is to use data parallelism. The easiest framework here is [PyTorch DistributedDataParallel](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) or DDP, which includes comprehensive tutorials on how to use this framework. Following this, we can convert our single GPU script to multiGPU using these simple steps:
+### Transforming single-GPU scripts for running on multiple GPUs (and nodes)
+To speed up training (due to large datasets), the most common strategy is to use data parallelism. The easiest framework here is [PyTorch DistributedDataParallel](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) or DDP, which includes comprehensive tutorials on how to use this framework. Following this, we can convert our single-GPU script to multi-GPU using these simple steps:
 1. Initialize `torch.distributed` using
      ```
      torch.distributed.init_process_group(backend='nccl', init_method='env://')
@@ -40,7 +41,7 @@ To speed up training (due to large datasets), the most common strategy is to use
  model = DistributedDataParallel(model, device_ids=[local_rank], output_device=[local_rank])
  ```
  4. Proceed with training as you would with a single GPU. DDP will automatically sync the gradients across devices when you call `loss.backward()` during the backpropagation.
- 5. Cleanup the GPU groups with `dist.destroy_process_group()`
+ 5. Cleanup the GPU groups after the training with `dist.destroy_process_group()`
 
 To launch the job:
 1. Define the [environment variables](https://pytorch.org/docs/stable/distributed.html#environment-variable-initialization) that allow `torch.distributed` to set up the distributed environment (`world_size` and `rank`). We implement that in [this bash script](export_DDP_vars.sh) that can be sourced when you allocate multiple GPUs using [srun](https://docs.nersc.gov/jobs/#srun). 
@@ -48,17 +49,17 @@ To launch the job:
  
  We implement these in our submit scripts that you can launch:
  - If you are using PyTorch modules (or your own conda env), submit [submit_batch_modules.sh](submit_batch_modules.sh) with `sbatch submit_batch_modules.sh`. Note that, in the script we have
-	 - Loaded libs with `module load pytorch/2.0.1`
+	 - Loaded the environment with `module load pytorch/2.0.1`
 	 - Set up the `$MASTER_ADDR` with `export MASTER_ADDR=$(hostname)`
 	 - Sourced the environment variables within the `srun` with `source export_DDP_vars.sh`: these will set the necessary variables for `torch.distributed` based on the allocated resources by `srun`. 
-- For shifter containers, see [submit_batch_shifter.sh](submit_batch_shifter.sh). The commands are mostly the same except we use a containerized environment for the libraries. 
+- For running with shifter (containers), see [submit_batch_shifter.sh](submit_batch_shifter.sh). The commands are mostly the same except we use a containerized environment. 
 Both scripts currently submit a 2 node job, but this can be changed to any number of nodes. 
 
 ### Other best practices
-- We recommend containers for more optimized libraries. NERSC provides PyTorch containers based on the [NVIDIA GPU cloud containers](https://docs.nvidia.com/deeplearning/frameworks/support-matrix/index.html). To query a list of PyTorch containers on Perlmutter, you can use `shifterimg images | grep pytorch`. The example shifter submit scripts use the container `nersc/pytorch:ngc-23.07-v0`. 
+- We recommend using containers for more optimized libraries and better performance. NERSC provides PyTorch containers based on the [NVIDIA GPU cloud containers](https://docs.nvidia.com/deeplearning/frameworks/support-matrix/index.html). To query a list of PyTorch containers on Perlmutter, you can use `shifterimg images | grep pytorch`. The example shifter submit scripts use the container `nersc/pytorch:ngc-23.07-v0`. 
 - Quick DDP note: checkpoint-restart needs a slight modification if you try to load a model without the `DistributedDataParallel` wrapper (for example, if you are doing inference on a single GPU) that was trained on multiple GPUs (using the `DistributedDataParallel` wrapper). 
 ```
-		try:
+	try:
             self.model.load_state_dict(checkpoint['model_state'])
         except:
             new_state_dict = OrderedDict()
@@ -68,5 +69,5 @@ Both scripts currently submit a 2 node job, but this can be changed to any numbe
             self.model.load_state_dict(new_state_dict)
    ``` 
  Models wrapped with DDP have an extra string `.module` that needs to be removed. The above lines in the scripts take care of this automatically
--  For logging application-specific metrics/visualizations and automatic hyperparameter optimization (HPO), we recommend [Weights & Biases](https://wandb.ai/site). See this [tutorial](https://github.com/NERSC/nersc-dl-wandb) that extends the above scripts to include Weights & Biases logging and automatic HPO on multiGPU tests.
-- Before moving to data parallelism, we first recommend that you optimize your code to run on single GPUs efficiently. Check out this [in-depth tutorial](https://github.com/NERSC/sc23-dl-tutorial) that takes you step-by-step in developing a large-scale AI for Science application: this includes [single GPU optimizations and profiling](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#single-gpu-performance-profiling-and-optimization), [data parallelism](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#distributed-training-with-data-parallelism), and, for very large models that do not fit on a single GPU, [model parallelism](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#model-parallelism). 
+-  For logging application-specific metrics/visualizations and automatic hyperparameter optimization (HPO), we recommend [Weights & Biases](https://wandb.ai/site). See this [tutorial](https://github.com/NERSC/nersc-dl-wandb) that extends the above scripts to include Weights & Biases logging and automatic HPO on multi-GPU tests.
+- Before moving to data parallelism, we first recommend that you optimize your code to run on single GPU efficiently. Check out this [in-depth tutorial](https://github.com/NERSC/sc23-dl-tutorial) that takes you step-by-step in developing a large-scale AI for Science application: this includes [single GPU optimizations and profiling](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#single-gpu-performance-profiling-and-optimization), [data parallelism](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#distributed-training-with-data-parallelism), and, for very large models that do not fit on a single GPU, [model parallelism](https://github.com/NERSC/sc23-dl-tutorial/tree/main?tab=readme-ov-file#model-parallelism). 
